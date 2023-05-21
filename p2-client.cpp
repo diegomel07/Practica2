@@ -37,7 +37,7 @@ int create_connect_socket(char *addr)
     return fd;
 }
 
-void sendDataToServer(int fd, Trip t, size_t sz)
+float sendDataToServer(int fd, Trip t, size_t sz)
 {
 
     int r, numbytes;
@@ -46,15 +46,22 @@ void sendDataToServer(int fd, Trip t, size_t sz)
 
     // enviando datos al servidor
     r = send(fd, bufferSend, sz, 0);
+    if (r < 0)
+    {
+        perror("error en send");
+        exit(-1);
+    }
 
     // respuesta del servidor
-    numbytes = recv(fd, buffer, MAXDATASIZE, 0);
+    float result;
+    numbytes = recv(fd, &result, sizeof(float), 0);
     if (numbytes == -1)
     {
         cout << "Error en recv()" << endl;
         exit(-1);
     }
-    printf("Mensaje: %s", buffer);
+
+    return result;
 }
 
 int main(int argc, char const *argv[])
@@ -67,7 +74,7 @@ int main(int argc, char const *argv[])
 
     // datos para la busqueda
     int opc, id_origen = -1, id_destino = -1, hora = -1;
-    float tiempo_medio = 0;
+    float tiempo_medio = 0, response = 0;
 
     // estructura temporal que guarda los datos
     Trip trip;
@@ -108,7 +115,7 @@ int main(int argc, char const *argv[])
 
             cout << "\033[2J\033[1;1H";
 
-            sendDataToServer(fd1, trip, sizeof(Trip));
+            response = sendDataToServer(fd1, trip, sizeof(Trip));
 
             break;
         case 2:
@@ -121,7 +128,7 @@ int main(int argc, char const *argv[])
 
             cout << "\033[2J\033[1;1H";
 
-            sendDataToServer(fd1, trip, sizeof(Trip));
+            response = sendDataToServer(fd1, trip, sizeof(Trip));
 
             break;
         case 3:
@@ -133,7 +140,7 @@ int main(int argc, char const *argv[])
 
             cout << "\033[2J\033[1;1H";
 
-            sendDataToServer(fd1, trip, sizeof(Trip));
+            response = sendDataToServer(fd1, trip, sizeof(Trip));
 
             break;
         case 4:
@@ -146,7 +153,7 @@ int main(int argc, char const *argv[])
             start_time = clock();
 
             trip.mean_travel_time = -2;
-            sendDataToServer(fd1, trip, sizeof(Trip));
+            trip.mean_travel_time = sendDataToServer(fd1, trip, sizeof(Trip));
 
             if (trip.mean_travel_time < 0)
             {
